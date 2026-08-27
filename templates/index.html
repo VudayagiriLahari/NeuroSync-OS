@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NEUROSYNC COMMAND CENTER</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #05070a;
+            --panel: rgba(20, 25, 35, 0.8);
+            --accent: #00ff88;
+            --text: #e0e6ed;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            background-color: var(--bg);
+            background-image: radial-gradient(circle at 50% 50%, #101520 0%, #05070a 100%);
+            color: var(--text);
+            font-family: 'Rajdhani', sans-serif;
+            margin: 0;
+            padding: 20px;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+    
+        .container {
+            display: grid;
+            grid-template-columns: 400px 1fr 400px;
+            gap: 20px;
+            height: 90vh;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .panel {
+            background: var(--panel);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+      
+        .panel::before {
+            content: ''; position: absolute; top: -2px; left: -2px; width: 20px; height: 20px;
+            border-top: 3px solid var(--accent); border-left: 3px solid var(--accent); border-radius: 5px 0 0 0;
+        }
+
+    
+        h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            letter-spacing: 4px;
+            color: #636e82;
+            margin: 0 0 25px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        h2::after { content: ''; flex: 1; height: 1px; background: var(--border); margin-left: 15px; }
+
+   
+        .video-wrapper {
+            width: 100%;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            margin-bottom: 25px;
+        }
+
+        #feed { width: 100%; display: block; filter: contrast(1.1) brightness(1.1); }
+
+        .stat-card {
+            background: rgba(255,255,255,0.03);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        .stat-label { font-size: 0.8rem; color: #888; text-transform: uppercase; }
+        .stat-value { font-family: 'Orbitron', sans-serif; font-size: 1.4rem; color: var(--accent); display: block; margin-top: 5px; }
+
+        .core-display { text-align: center; justify-content: center; }
+        #emotion-icon { font-size: 10rem; margin-bottom: 10px; transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        #emotion-name { font-family: 'Orbitron', sans-serif; font-size: 5rem; margin: 0; font-weight: 700; text-transform: uppercase; }
+        #msg-box { font-size: 1.4rem; color: #8a94a6; margin-top: 20px; line-height: 1.4; }
+
+    
+        .analysis-box { flex: 1; background: rgba(0,0,0,0.2); border-radius: 15px; padding: 25px; border-left: 5px solid var(--accent); }
+        .log-terminal {
+            height: 150px;
+            background: #000;
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: var(--accent);
+            overflow-y: hidden;
+            margin-top: auto;
+        }
+
+     
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: auto; }
+        button {
+            padding: 18px; border: none; border-radius: 10px; font-family: 'Orbitron', sans-serif;
+            font-weight: bold; cursor: pointer; transition: 0.3s; text-transform: uppercase;
+        }
+        .btn-start { background: var(--accent); color: #000; box-shadow: 0 0 20px rgba(0, 255, 136, 0.3); }
+        .btn-start:hover { transform: scale(1.02); box-shadow: 0 0 30px rgba(0, 255, 136, 0.5); }
+        .btn-stop { background: transparent; color: white; border: 1px solid #ff0055; }
+        .btn-stop:hover { background: #ff0055; }
+
+        .visualizer { display: flex; align-items: flex-end; gap: 3px; height: 30px; margin-top: 20px; }
+        .bar { flex: 1; background: var(--accent); height: 10%; animation: pulse 1s infinite alternate; }
+        @keyframes pulse { from { height: 10%; } to { height: 100%; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="panel">
+        <h2>System Telemetry</h2>
+        <div class="video-wrapper">
+            <img id="feed" src="/video_feed">
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Neural Confidence</span>
+            <span id="ui-conf" class="stat-value">0.0%</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">System Status</span>
+            <span id="ui-status" class="stat-value" style="color: #ff0055;">OFFLINE</span>
+        </div>
+        <div class="controls">
+            <button class="btn-start" onclick="start()">Initialize</button>
+            <button class="btn-stop" onclick="stop()">Terminal</button>
+        </div>
+    </div>
+
+    <div class="panel core-display">
+        <div id="emotion-icon">😐</div>
+        <h1 id="emotion-name">Standby</h1>
+        <p id="msg-box">Awaiting biometric data stream...</p>
+        
+        <div class="visualizer" id="viz">
+            <div class="bar" style="animation-delay: 0.1s"></div>
+            <div class="bar" style="animation-delay: 0.3s"></div>
+            <div class="bar" style="animation-delay: 0.5s"></div>
+            <div class="bar" style="animation-delay: 0.2s"></div>
+            <div class="bar" style="animation-delay: 0.4s"></div>
+        </div>
+        <audio id="player" loop style="display:none"></audio>
+    </div>
+
+    <div class="panel">
+        <h2>Neural Analysis</h2>
+        <div class="analysis-box">
+            <h3 id="ana-title" style="margin:0; font-family:'Orbitron'">Ready</h3>
+            <p id="ana-desc" style="font-size: 1.1rem; color: #b0b8c4;">Linking with Emotion Model v3.0.4...</p>
+        </div>
+        
+        <div class="log-terminal" id="logs">
+            > [SYSTEM] Initializing kernel...<br>
+            > [DASHBOARD] Rendering GL context...<br>
+            > [AUDIO] Voices ready.
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentEmo = "";
+    let musicPath = "";
+    const synth = window.speechSynthesis;
+
+    function log(msg) {
+        const logs = document.getElementById('logs');
+        logs.innerHTML += `> ${msg}<br>`;
+        logs.scrollTop = logs.scrollHeight;
+    }
+
+    function speak(text) {
+        if (synth.speaking) synth.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        const voices = synth.getVoices();
+        utter.voice = voices.find(v => v.name.includes("Google") || v.name.includes("Female")) || voices[0];
+        utter.rate = 0.9;
+        synth.speak(utter);
+    }
+
+    async function start() {
+        await fetch('/start_system', {method:'POST'});
+        log("BIOMETRIC LINK ESTABLISHED");
+    }
+
+    async function stop() {
+        await fetch('/stop_system', {method:'POST'});
+        log("SYSTEM DISCONNECTED");
+    }
+
+    async function update() {
+        try {
+            const res = await fetch('/get_emotion');
+            const d = await res.json();
+            
+            if(d.running) {
+                document.getElementById('ui-status').innerText = "ONLINE";
+                document.getElementById('ui-status').style.color = "#00ff88";
+                document.getElementById('ui-conf').innerText = d.confidence + "%";
+                document.getElementById('emotion-name').innerText = d.emotion;
+                document.getElementById('emotion-name').style.color = d.data.color;
+                document.getElementById('emotion-icon').innerText = d.data.icon;
+                document.getElementById('msg-box').innerText = d.data.msg;
+                document.getElementById('ana-title').innerText = d.emotion + " Analysis";
+                document.getElementById('ana-desc').innerText = d.data.analysis;
+
+                if(currentEmo !== d.emotion) {
+                    currentEmo = d.emotion;
+                    log(`EMOTION SHIFT: ${d.emotion}`);
+                    speak(d.data.voice_line);
+                    
+                    let path = "/static/music/" + d.data.music;
+                    if(musicPath !== path) {
+                        musicPath = path;
+                        const p = document.getElementById('player');
+                        p.src = path; p.play();
+                    }
+                }
+            }
+        } catch(e) {}
+    }
+
+    setInterval(update, 1000);
+    window.speechSynthesis.onvoiceschanged = () => synth.getVoices();
+</script>
+</body>
+</html>
